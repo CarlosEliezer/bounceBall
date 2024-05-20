@@ -15,6 +15,7 @@ PADDLE_SPEED = 200
 function love.load()
    local file = io.open('highScore.txt', 'r')
    love.graphics.setDefaultFilter('nearest', 'nearest')
+   love.window.setTitle('Brick Breaker')
 
    math.randomseed(os.time())
 
@@ -29,8 +30,8 @@ function love.load()
       vsync = true
    })
 
-   playerScore = 0
-   lifePoint = 3
+   score = 0
+   lifePoint = 1
    highScore = file:read('*all')
    file:close()
 
@@ -44,8 +45,56 @@ function love.load()
 end
 
 function love.update(dt)
-      if gameState == 'play' then
-         -- Player movement
+   if gameState == 'play' then
+      -- detect paddle colision
+      if ball:collides(player) then
+         ball.dy = -ball.dy * 1.1
+         ball.y = player.y - 4
+         score = score + 3
+
+         if ball.dx < 0 then
+            ball.dx = -math.random(10, 150)
+         else
+            ball.dx = math.random(10, 150)
+         end
+      end
+
+      -- detect sides colision
+      if ball.x <= 0 then
+         ball.x = 0
+         ball.dx = -ball.dx * 1.05
+         score = score + 1
+      end
+
+      if ball.x >= VIRTUAL_WIDTH - 4 then
+         ball.x = VIRTUAL_WIDTH - 4
+         ball.dx = -ball.dx * 1.05
+         score = score + 1
+      end
+
+      -- detect top colision and bottom colision
+      if ball.y <= 34 then
+         ball.y = 34
+         ball.dy = -ball.dy * 1.05
+         score = score + 1
+      end
+
+      if ball.y >= VIRTUAL_HEIGHT - 4 then
+         lifePoint = lifePoint - 1
+         if lifePoint <= 0 then
+            local file = io.open('highScore.txt', 'w')
+            file:write(tostring(score))
+            file:close()
+            score = 0
+            lifePoint = 3
+         end
+
+         player:reset()
+         ball:reset()
+         gameState = 'start'
+      end
+
+      -- Player movement
       if love.keyboard.isDown('a') or love.keyboard.isDown('left') then
          player.dx = -PADDLE_SPEED
       elseif love.keyboard.isDown('d') or love.keyboard.isDown('right') then
@@ -83,7 +132,7 @@ function love.draw()
    love.graphics.setFont(scoreFont)
    
    love.graphics.print(tostring(lifePoint)..' LP', VIRTUAL_WIDTH / 4 - 8, 10)
-   love.graphics.print(tostring(playerScore), VIRTUAL_WIDTH / 4, 20)
+   love.graphics.print(tostring(score), VIRTUAL_WIDTH / 4, 20)
    
    love.graphics.print('HIGH SCORE', VIRTUAL_WIDTH / 2 - 20, 10)
    love.graphics.print(tostring(highScore), VIRTUAL_WIDTH / 2, 20)
