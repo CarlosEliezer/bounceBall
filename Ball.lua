@@ -25,7 +25,7 @@ end
 function Ball:reset()
    self.x = VIRTUAL_WIDTH / 2 - 2
    self.y = VIRTUAL_HEIGHT - 35
-   self.dy = math.random(-50, 50) * 1.1
+   self.dy = -math.random(50, 100) * 1.1
    self.dx = math.random(2) == 1 and 100 or -100
 end
 

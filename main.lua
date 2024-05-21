@@ -11,6 +11,7 @@ VIRTUAL_WIDTH = 432
 VIRTUAL_HEIGHT = 243
 
 PADDLE_SPEED = 200
+LP = 3
 
 function love.load()
    local file = io.open('highScore.txt', 'r')
@@ -31,7 +32,7 @@ function love.load()
    })
 
    score = 0
-   lifePoint = 1
+   lifePoint = LP
    highScore = file:read('*all')
    file:close()
 
@@ -42,6 +43,17 @@ function love.load()
    ball = Ball(VIRTUAL_WIDTH / 2 - 2, VIRTUAL_HEIGHT - 35, 4, 4)
 
    gameState = 'start'
+end
+
+function SaveScore()
+   if score > tonumber(highScore) then
+      local file = io.open('highScore.txt', 'w')
+      file:write(tostring(score))
+      file:close()
+
+      -- update the High Score into current section
+      highScore = score
+   end
 end
 
 function love.update(dt)
@@ -57,6 +69,11 @@ function love.update(dt)
          else
             ball.dx = math.random(10, 150)
          end
+      end
+
+      if gameState == 'start' then
+         ball.dx = math.random(-50, 50)
+         ball.dy = -math.random(140, 200)
       end
 
       -- detect sides colision
@@ -82,17 +99,10 @@ function love.update(dt)
       if ball.y >= VIRTUAL_HEIGHT - 4 then
          lifePoint = lifePoint - 1
          if lifePoint <= 0 then
-            if score > tonumber(highScore) then
-               local file = io.open('highScore.txt', 'w')
-               file:write(tostring(score))
-               file:close()
-
-               -- update the High Score into current section
-               highScore = score
-            end
+            SaveScore()
             
             score = 0
-            lifePoint = 1
+            lifePoint = LP
          end
 
          player:reset()
@@ -119,13 +129,10 @@ function love.keypressed(key)
    if key == 'escape' then
       love.event.quit()
    elseif key == 'enter' or key == 'return' then
-      if gameState == 'start' then
+      if gameState == 'start' or gameState == 'pause' then
          gameState = 'play'
       else
-         gameState = 'start'
-
-         player:reset()
-         ball:reset()
+         gameState = 'pause'
       end
    end
 end
@@ -146,8 +153,19 @@ function love.draw()
    if gameState == 'start' then
       love.graphics.setFont(infoFont)
       love.graphics.printf(
-         'Press ENTER to start!', 
+         'Press ENTER!', 
          0, 
+         VIRTUAL_HEIGHT / 2-8, -- (Halfway down the screen) - (Font size)
+         VIRTUAL_WIDTH, 
+         'center'
+      )
+   end
+
+   if gameState == 'pause' then
+      love.graphics.setFont(infoFont)
+      love.graphics.printf(
+         'PAUSED',
+         0,
          VIRTUAL_HEIGHT / 2-8, -- (Halfway down the screen) - (Font size)
          VIRTUAL_WIDTH, 
          'center'
