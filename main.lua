@@ -1,8 +1,9 @@
 push = require 'push'
 Class = require 'class'
 
-require 'Paddle'
 require 'Ball'
+require 'Brick'
+require 'Paddle'
 
 WINDOW_WIDTH = 1280
 WINDOW_HEIGHT = 720
@@ -10,8 +11,16 @@ WINDOW_HEIGHT = 720
 VIRTUAL_WIDTH = 432
 VIRTUAL_HEIGHT = 243
 
+COLORS = {
+   Red = {225/255, 14/255, 15/255, 90/100},
+   Purple = {190/255, 15/255, 186/255, 90/100},
+   Orange = {200/255, 43/255, 15/255, 90/100},
+   White = {1, 1, 1, 1}
+}
+
 PADDLE_SPEED = 200
 LP = 3
+BRICKS_NUMBER = 50
 
 function love.load()
    local file = io.open('highScore.txt', 'r')
@@ -41,6 +50,25 @@ function love.load()
 
    -- Ball moves to every direction
    ball = Ball(VIRTUAL_WIDTH / 2 - 2, VIRTUAL_HEIGHT - 35, 4, 4)
+
+   -- Create the bricks to be broken
+   bricks = {}
+   rows = BRICKS_NUMBER / 5
+
+   -- Variables to define position of the bricks
+   columnStart = VIRTUAL_WIDTH / 4
+   rowStart = 60
+
+   for i = 0, BRICKS_NUMBER - 1, 1 do
+      bricks[i] = Brick(columnStart, rowStart, 32, 8)
+
+      if i ~= 0 and i % rows == 0 then
+         columnStart = columnStart + 34
+         rowStart = 60
+      else
+         rowStart = rowStart + 10
+      end
+   end
 
    gameState = 'start'
 end
@@ -144,14 +172,26 @@ function love.draw()
    love.graphics.clear(40/255, 45/255, 52/255, 255/255) -- (R, G, B, Transparency)
    love.graphics.setFont(scoreFont)
    
+   love.graphics.setColor(COLORS.White)
    love.graphics.print(tostring(lifePoint)..' LP', VIRTUAL_WIDTH / 4 - 8, 10)
    love.graphics.print(tostring(score), VIRTUAL_WIDTH / 4, 20)
    
+   love.graphics.setColor(COLORS.Orange)
    love.graphics.print('HIGH SCORE', VIRTUAL_WIDTH / 2 - 20, 10)
    love.graphics.print(tostring(highScore), VIRTUAL_WIDTH / 2, 20)
 
+   love.graphics.setColor(COLORS.White)
+   player:render()
+   ball:render()
+   for i = 0, BRICKS_NUMBER - 1, 1 do
+      bricks[i]:render()
+   end
+   
+   love.graphics.rectangle('fill', 0, 30, VIRTUAL_WIDTH, 5)
+
    if gameState == 'start' then
       love.graphics.setFont(infoFont)
+      love.graphics.setColor(COLORS.Red)
       love.graphics.printf(
          'Press ENTER!', 
          0, 
@@ -163,6 +203,7 @@ function love.draw()
 
    if gameState == 'pause' then
       love.graphics.setFont(infoFont)
+      love.graphics.setColor(COLORS.Red)
       love.graphics.printf(
          'PAUSED',
          0,
@@ -171,11 +212,6 @@ function love.draw()
          'center'
       )
    end
-   
-   player:render()
-   ball:render()
-
-   love.graphics.rectangle('fill', 0, 30, VIRTUAL_WIDTH, 5)
 
    push:apply('end')
 end
