@@ -82,11 +82,17 @@ function love.update(dt)
       if ball.y >= VIRTUAL_HEIGHT - 4 then
          lifePoint = lifePoint - 1
          if lifePoint <= 0 then
-            local file = io.open('highScore.txt', 'w')
-            file:write(tostring(score))
-            file:close()
+            if score > tonumber(highScore) then
+               local file = io.open('highScore.txt', 'w')
+               file:write(tostring(score))
+               file:close()
+
+               -- update the High Score into current section
+               highScore = score
+            end
+            
             score = 0
-            lifePoint = 3
+            lifePoint = 1
          end
 
          player:reset()
